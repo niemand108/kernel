@@ -100,7 +100,7 @@ static struct file_operations niemand_fops = {
  * */
 static void niemand_exit_module(void)
 {
-  /* Liberate used memory and also registered devices
+  /* Release used memory and also registered devices
    * and its structures */
   dev_t devno = MKDEV(niemand_major, niemand_minor);
   cdev_del(&niemand_device->cdev); 
