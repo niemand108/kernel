@@ -1,3 +1,5 @@
+Increment Module: in each read increments a intern variable in one.
+
 This module is valid for the 2.6 kernel.
 
 Steps to load the module:
