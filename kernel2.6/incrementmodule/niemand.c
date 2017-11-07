@@ -7,6 +7,9 @@
 #include <linux/errno.h>
 #include <linux/moduleparam.h>
 #include <asm/uaccess.h>
+
+#define MAX_SIZE        100
+
 MODULE_LICENSE("GPL");
 
 /* * * *
@@ -55,7 +58,7 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
                         size_t count, loff_t *f_pos)
 {
   int ret = 0;                                 
-  char stringint[100];
+  char stringint[MAX_SIZE];
   /* Retrieve our device struct from the descripter file */
   struct niemand_dev *dev = filp->private_data;
   
@@ -66,6 +69,12 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
   }
   ret = sprintf(stringint, "%d", dev->number++);
   
+  if(ret >= MAX_SIZE-1)
+  {
+    ret = 1;
+    dev->number = 0;
+  }
+    
   if(printk_ratelimit())
     printk(KERN_NOTICE "%s++, size: %d",stringint, ret);
 
