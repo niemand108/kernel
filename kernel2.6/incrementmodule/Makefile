@@ -1,5 +1,5 @@
 
-#DEBUG = y
+DEBUG = y
 
 ifeq ($(DEBUG),y)
   DEBFLAGS = -O -g -DSCULL_DEBUG # "-O" is needed to expand inlines
