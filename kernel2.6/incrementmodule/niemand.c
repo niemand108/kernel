@@ -65,7 +65,9 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
     return -ERESTARTSYS;
   }
   ret = sprintf(stringint, "%d", dev->number++);
-  printk(KERN_NOTICE "%s++, size: %d",stringint, ret);
+  
+  if(print_ratelimit())
+    printk(KERN_NOTICE "%s++, size: %d",stringint, ret);
 
   /* Copy to user memory(buf) a piece of
    * kernel memory(stringing with size=ret) */
