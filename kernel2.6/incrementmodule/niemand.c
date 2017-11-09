@@ -142,7 +142,7 @@ static int niemand_init_module(void)
     return ret;
   }
   
-  /* Memory reserved for our structure */
+  /* Memory reserved for our structure (its scope: this module) */
   niemand_device = kmalloc(sizeof(struct niemand_dev), GFP_KERNEL);
   if(!niemand_device){
     goto fail;
@@ -155,10 +155,11 @@ static int niemand_init_module(void)
   sema_init(&niemand_device->sem, 1);
   /* ... also initialize/allocate the cdev structure */
   cdev_init(&niemand_device->cdev, &niemand_fops);
-  niemand_device->cdev.owner = THIS_MODULE;
+ 
+  // niemand_device->cdev.owner = THIS_MODULE;
   // niemand_device->cdev.ops = &niemand_fops;
  
-  /* with cdev_add the device is goint to be available for the kernel and
+  /* with cdev_add the device is going to be available for the kernel and
    * consequently for its users */
   err = cdev_add(&niemand_device->cdev, dev, 1);
   if(err){
