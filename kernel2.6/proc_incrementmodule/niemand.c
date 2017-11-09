@@ -43,12 +43,6 @@ module_param(niemand_minor, int, S_IRUGO);
 /* This structure hold information about our /proc file
  * */
 static struct proc_dir_entry *niemand_proc_file;
-/* Buffer to store info for this module of MAX_SIZE
- * */
-static char niemand_procfs_buffer[MAX_SIZE];
-/* Size of the buffer
- * */
-static unsigned long niemand_procfs_buffer_size = 0;
 
 
 /* This function will be called when de /proc file is read 
@@ -75,20 +69,21 @@ int niemand_procfs_read( char *buffer, char **buffer_location, \
 int niemand_procfs_write(struct file *file, const char *buffer, \
                         unsigned long count, void *data)
 {
-  unsigned long *val;
-  
-  niemand_procfs_buffer_size = count;
-  if(count >= MAX_SIZE)
-    niemand_procfs_buffer_size = MAX_SIZE;
+  unsigned long val = 0;
 
+  /* Buffer to store info for this module of MAX_SIZE
+   * * */
+  char niemand_procfs_buffer[MAX_SIZE] = "";  
+  if(count > MAX_SIZE){
+    count = MAX_SIZE;
+  }
   if(copy_from_user(niemand_procfs_buffer /*to*/,\
                     buffer /*from*/,\
-                    niemand_procfs_buffer_size /*size*/))
+                    count /*size*/))
   {
     return -EFAULT;
   }
 
-  
   if(0 != strict_strtoul(niemand_procfs_buffer, 0, &val))
   {
     printk(KERN_INFO "writting failed %s", niemand_procfs_buffer);
@@ -103,7 +98,7 @@ int niemand_procfs_write(struct file *file, const char *buffer, \
   niemand_device->number = (long) val;
   up(&niemand_device->sem);
  
-  return niemand_procfs_buffer_size;
+  return count;
 }
 
 
@@ -130,7 +125,7 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
                         size_t count, loff_t *f_pos)
 {
   int ret = 0;                                 
-  char stringint[100];
+  char stringint[MAX_SIZE];
   /* Retrieve our device struct from the descripter file */
   struct niemand_dev *dev = filp->private_data;
   
@@ -178,10 +173,12 @@ static struct file_operations niemand_fops = {
  * */
 static void niemand_exit_module(void)
 {
+  dev_t devno = MKDEV(niemand_major, niemand_minor);
+
   remove_proc_entry(PROC_NAME, NULL /* main directory proc */);
+  
   /* Release used memory and also registered devices
    * and its structures */
-  dev_t devno = MKDEV(niemand_major, niemand_minor);
   cdev_del(&niemand_device->cdev); 
   kfree(niemand_device);
   unregister_chrdev_region(devno, 1);
