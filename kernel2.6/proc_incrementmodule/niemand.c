@@ -95,7 +95,13 @@ int niemand_procfs_write(struct file *file, const char *buffer, \
     printk(KERN_WARNING "Fail doing semaphore-down");
     return -ERESTARTSYS;
   }
-  niemand_device->number = (long) val;
+  if(val < ULONG_MAX) 
+  {
+    niemand_device->number = (long) val;
+  } else {
+    niemand_device->number = 0;
+  }
+  
   up(&niemand_device->sem);
  
   return count;
@@ -135,15 +141,20 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
     return -ERESTARTSYS;
   }
   
-  ret = sprintf(stringint, "%lu", dev->number++);
-  
-  if(ret > MAX_SIZE){
+
+  if(dev->number >= ULONG_MAX)
+  {
     ret = 1;
     dev->number = 0;
+  } 
+  else 
+  {
+    dev->number++;
+    ret = sprintf(stringint, "%lu", dev->number);
   }
 
   if(printk_ratelimit())
-    printk(KERN_NOTICE "%s++, size: %d",stringint, ret);
+    printk(KERN_NOTICE "%lu++, size: %d", dev->number, ret);
 
   /* Copy to user memory(buf) a piece of
    * kernel memory(stringing with size=ret) */
