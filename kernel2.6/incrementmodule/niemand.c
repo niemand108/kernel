@@ -7,10 +7,14 @@
 #include <linux/errno.h>
 #include <linux/moduleparam.h>
 #include <asm/uaccess.h>
+#include <linux/proc_fs.h>
 
-#define MAX_SIZE        100
+#define MAX_SIZE         100
+#define MODULE_NAME     "niemand"
+#define PROC_NAME       MODULE_NAME
 
 MODULE_LICENSE("GPL");
+
 
 /* * * *
  * Global variables (scope: this module) 
@@ -21,7 +25,7 @@ int niemand_minor = 0;  // minor number of this device
 
 /* Our structure definition */
 struct niemand_dev {
-  int number;                   //a simple integer number which we access
+  unsigned long number;         //a simple  number which we access
   struct semaphore sem;         //semaphore for mutual exclusion
   struct cdev cdev;             //structure for one/this character device
 };
@@ -34,6 +38,7 @@ struct niemand_dev *niemand_device;
  * */
 module_param(niemand_major, int, S_IRUGO);  
 module_param(niemand_minor, int, S_IRUGO);
+
 
 /* Definition of a open-function for the future fops
  * */
@@ -67,16 +72,21 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
     printk(KERN_WARNING "Fail doing semaphore-down");
     return -ERESTARTSYS;
   }
-  ret = sprintf(stringint, "%d", dev->number++);
   
-  if(ret >= MAX_SIZE-1)
+
+  if(dev->number >= ULONG_MAX)
   {
     ret = 1;
     dev->number = 0;
+  } 
+  else 
+  {
+    dev->number++;
+    ret = sprintf(stringint, "%lu", dev->number);
   }
-    
+
   if(printk_ratelimit())
-    printk(KERN_NOTICE "%s++, size: %d",stringint, ret);
+    printk(KERN_NOTICE "%lu++, size: %d", dev->number, ret);
 
   /* Copy to user memory(buf) a piece of
    * kernel memory(stringing with size=ret) */
@@ -111,9 +121,9 @@ static struct file_operations niemand_fops = {
  * */
 static void niemand_exit_module(void)
 {
+  dev_t devno = MKDEV(niemand_major, niemand_minor);
   /* Release used memory and also registered devices
    * and its structures */
-  dev_t devno = MKDEV(niemand_major, niemand_minor);
   cdev_del(&niemand_device->cdev); 
   kfree(niemand_device);
   unregister_chrdev_region(devno, 1);
@@ -131,18 +141,18 @@ static int niemand_init_module(void)
    * it as module param, if not -> retrive automagicly */
   if(niemand_major) {
     dev = MKDEV(niemand_major, niemand_minor);
-    ret = register_chrdev_region(dev, 1, "niemand");
+    ret = register_chrdev_region(dev, 1, MODULE_NAME);
   } else {
-    ret = alloc_chrdev_region(&dev, niemand_minor, 1, "niemand");
+    ret = alloc_chrdev_region(&dev, niemand_minor, 1, MODULE_NAME);
     niemand_major = MAJOR(dev);
   }
 
   if(ret < 0) {
-    printk(KERN_WARNING "cant get major %d number for device niemand", niemand_major);
+    printk(KERN_WARNING "cant get major %d number for device %s", niemand_major, MODULE_NAME);
     return ret;
   }
   
-  /* Memory reserved for our structure (its scope: this module) */
+  /* Memory reserved for our structure */
   niemand_device = kmalloc(sizeof(struct niemand_dev), GFP_KERNEL);
   if(!niemand_device){
     goto fail;
@@ -155,11 +165,10 @@ static int niemand_init_module(void)
   sema_init(&niemand_device->sem, 1);
   /* ... also initialize/allocate the cdev structure */
   cdev_init(&niemand_device->cdev, &niemand_fops);
- 
-  // niemand_device->cdev.owner = THIS_MODULE;
+  niemand_device->cdev.owner = THIS_MODULE;
   // niemand_device->cdev.ops = &niemand_fops;
  
-  /* with cdev_add the device is going to be available for the kernel and
+  /* with cdev_add the device is goint to be available for the kernel and
    * consequently for its users */
   err = cdev_add(&niemand_device->cdev, dev, 1);
   if(err){
