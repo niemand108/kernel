@@ -137,6 +137,11 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
   
   ret = sprintf(stringint, "%lu", dev->number++);
   
+  if(ret > MAX_SIZE){
+    ret = 1;
+    dev->number = 0;
+  }
+
   if(printk_ratelimit())
     printk(KERN_NOTICE "%s++, size: %d",stringint, ret);
 
