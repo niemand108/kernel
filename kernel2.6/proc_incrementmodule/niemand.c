@@ -145,7 +145,9 @@ ssize_t niemand_read(struct file *filp, char __user *buf,\
   if(dev->number >= ULONG_MAX)
   {
     ret = 1;
+    strcpy(stringint, "0");
     dev->number = 0;
+    printk(KERN_WARNING "Prevention of long unsigned overflow: starting at 0")
   } 
   else 
   {
