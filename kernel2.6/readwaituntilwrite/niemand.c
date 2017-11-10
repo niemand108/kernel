@@ -12,21 +12,30 @@ MODULE_LICENSE("GPL");
 
 static int niemand_major = 0;
 
+/*
+ * Declare "completion" ready to be used
+ * */
 DECLARE_COMPLETION(completion);
 
 ssize_t niemand_read(struct file *filp, char __user *buf, size_t count, loff_t *pos)
 {
   printk(KERN_DEBUG "procces %i-> %s sleeping until another process write",\
                              current->pid, current->comm);
+  /* waits until another process call to "complete(&completion);"
+   * */
   wait_for_completion(&completion);
-  printk(KERN_DEBUG "process %i -> %s awoken", current->pid, current->comm);
+  printk(KERN_DEBUG "process %i -> %s awoken",
+                        current->pid, current->comm);
   return count;
 }
 
 ssize_t niemand_write(struct file *filp, const char __user *buf,\
                       size_t count, loff_t *pos)
 {
-  printk(KERN_DEBUG "process %i -> %s awakening one reader process", current->pid, current->comm);
+  printk(KERN_DEBUG "process %i -> %s awakening one reader process", 
+                        current->pid, current->comm);
+  /* Communicates to kernel a "completion", 
+   * which unlocks a wait_for_completion process */
   complete(&completion);
   return count;
 }
