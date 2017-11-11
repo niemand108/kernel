@@ -1,6 +1,7 @@
 This module lock completly the kernel for seconds.
 
-This module is valid for the 2.6 kernel.
+This module is valid for the 2.6 kernel. 
+All compiler optimizations are disabled.
 
 Steps to test the module:
   1. make
