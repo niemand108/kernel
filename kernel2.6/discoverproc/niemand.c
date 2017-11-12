@@ -29,12 +29,11 @@ int procfs_read( char *buffer, \
                  off_t offset, int buffer_length, \
                  int *eof, void *data)
 {
-  int ret;
   struct task_struct *g, *t;
   int pids_in_kernel[MAX_PROCESS];
   int pidnumber, i, length = 0;
   struct dentry *cur_dentry, * parent_dentry;
-  unsigned char *dname, buffer_temp[20], *buffer_res, *buffer_concat;
+  unsigned char *dname, buffer_temp[20], *buffer_concat;
   bool hidden;
   struct file *proc_filp;
 
