@@ -70,6 +70,10 @@ int procfs_read( char *buffer, \
           }
           if(hidden){
             sprintf(buffer_temp, "Hidden: %d\n", pidnumber);
+            
+            if(strlen(buffer) + strlen(buffer_temp) >= buffer_length)
+              return -ENOBUFS;
+
             strcat(buffer, buffer_temp);
             printk(KERN_DEBUG "Procces hidden PID: %d", pidnumber);
           }
