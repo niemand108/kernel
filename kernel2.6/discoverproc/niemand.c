@@ -33,7 +33,7 @@ int procfs_read( char *buffer, \
   int pids_in_kernel[MAX_PROCESS];
   int pidnumber, i, length = 0;
   struct dentry *cur_dentry, * parent_dentry;
-  unsigned char *dname, buffer_temp[20], *buffer_concat;
+  unsigned char *dname, buffer_temp[24];
   bool hidden;
   struct file *proc_filp;
 
@@ -56,8 +56,6 @@ int procfs_read( char *buffer, \
   proc_filp = filp_open( "/proc", O_RDONLY, 0);  
   parent_dentry = (proc_filp->f_path).dentry;
 
-  sprintf(buffer, ""); 
-
   list_for_each_entry(cur_dentry, &parent_dentry->d_subdirs, \
                        d_u.d_child){
         dname = cur_dentry->d_name.name;
@@ -79,7 +77,6 @@ int procfs_read( char *buffer, \
   }
   return strlen(buffer);
 }
-
 
 int niemand_init(void)
 {
