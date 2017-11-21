@@ -6,7 +6,7 @@ Este modulo y su POC demuestran como una referencia a NULL en el kernel puede ca
 ¿Cómo funciona todo esto?
 =========================
 
-Vamos a cargar un módulo que tiene un principal objetivo: que cada vez que escribamos en su /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, es decir, a una funcion no referenciada.
+Vamos a cargar un módulo que tiene un principal objetivo: que cada vez que escribamos en su /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, es decir, a una funcion no referenciada:
 
 ```
 void (*my_dereference_funptr)(void);  //Declarada pero no inicializada
@@ -19,9 +19,9 @@ ssize_t write_proc(struct file *filp,const char *buf,\
 }
 ```
 
-De esta forma la función tendrá como valor por defecto una dirección nula(la dirección 0x0); y al ejecutarla hará que se salte a dicha dirección, que además es válida y conocida por el proceso en su espacio de usuario. 
+De esta forma la función tendrá como valor por defecto una dirección nula(la dirección 0x0); y al ejecutarla hará que se salte a 0x0, que es válida y conocida por el proceso en su espacio de usuario. 
 
-El POC lo único que hace es cargar un payload en la dirección $0 y posteriormente escribir en /proc/nullderef para que se llame a la función de arriba.
+El POC lo único que hace es cargar un payload en la dirección $0 y posteriormente escribir en /proc/nullderef para que se llame a la función write de arriba:
 
 ```
   memcpy(0, payload, sizeof(payload));        //Cargamos el payload en 0x0
