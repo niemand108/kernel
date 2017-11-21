@@ -32,6 +32,6 @@ El resultado final lo podemos ver en los log del kernel:
 ¿Cómo funciona todo esto?
 =========================
 
-El módulo que cargamos en el sistema sólo tiene un objetivo: que cada vez que escribamos en /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, de esta forma la función tiene como valor por defecto una dirección nula, es decir, la dirección 0x0. Si ejecutamos la función sin inicializar saltaremos a dicha dirección que es una dirección válida y conocida para el espacio de usuario. El POC lo único que hace cargar un payload en la dirección $0, de tal forma que se ejecutará lo que allí pongamos, en este caso el código "jump 0x41414141", que finalmente acabará fatídicamente como un "RIP: xx:41414141. Bad RIP Value" en los registros del sistema. 
+El módulo que cargamos en el sistema sólo tiene un objetivo: que cada vez que escribamos en /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, de esta forma la función tiene como valor por defecto una dirección nula, es decir, la dirección 0x0. Por lo tanto, si ejecutamos la función sin inicializar saltaremos a dicha dirección, que es una dirección válida y conocida para el proceso en el espacio de usuario. El POC lo único que hace es cargar un payload en la dirección $0, de tal forma que se ejecutará lo que allí pongamos, en este caso el código "jump 0x41414141", que finalmente acabará fatídicamente como un "RIP: xx:41414141. Bad RIP Value" en los registros del sistema. 
 
 [1] https://lwn.net/Articles/342330/
