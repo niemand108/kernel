@@ -1,12 +1,12 @@
 Explotando la técnica Null Dereference
 ====================================
 
-Este modulo y su POC demuestran como una referencia a NULL en el kernel puede causar ejecución de código arbitrario en nuestro sistema. Es difícil saber el año en que se comenzó a explotar esta técnica, pero según un artículo de John Corbet[1] parece ser que fue por 2009. Desde entonces se ha restringido el acceso a las zonas bajas de memoria del usuario, mitigando el problema de las referencias nulas mediante configuraciones con sysctl y SELinux.
+Este modulo y su POC demuestran como una referencia a NULL en el kernel puede causar ejecución de código arbitrario en nuestro sistema. Es difícil saber el año en que se comenzó a explotar esta técnica, pero según un artículo de John Corbet[1] parece ser que fue por 2009. Desde entonces se ha restringido el acceso a las zonas bajas de memoria del usuario, mitigando el problema de las referencias nulas mediante configuraciones con sysctl y SELinux. 
 
 ¿Cómo funciona todo esto?
 =========================
 
-Vamos a cargar un módulo que tiene un principal objetivo: que cada vez que escribamos en su /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, es decir, a una funcion no referenciada:
+Lo primero es desactivar las protecciones de memorias bajas de sysctl y SELinux. Lo segundo es cargar un módulo que tiene un principal objetivo: que cada vez que escribamos en su /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, es decir, a una funcion no referenciada:
 
 ```
 void (*my_dereference_funptr)(void);  //Declarada pero no inicializada
@@ -19,7 +19,7 @@ ssize_t write_proc(struct file *filp,const char *buf,\
 }
 ```
 
-De esta forma la función tendrá como valor por defecto una dirección nula(la dirección 0x0); y al ejecutarla hará que se salte a 0x0, que es válida y conocida por el proceso en su espacio de usuario. 
+De esta forma, al no estar inicializada, la función tendrá como valor por defecto una dirección nula(la dirección 0x0); y al ejecutarla hará que se salte a 0x0, que es válida y conocida por el proceso en su espacio de usuario. 
 
 El POC lo único que hace es cargar un payload en la dirección $0 y posteriormente escribir en /proc/nullderef para que se llame a la función write de arriba:
 
