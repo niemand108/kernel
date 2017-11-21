@@ -1,4 +1,38 @@
-Este modulo y su POC demuestran como una referencia a null en el kernel puede causar ejecución de código arbitrario en nuestro sistema. Es difícil saber el año en que se comenzó a explotar esta técnica, pero según un artículo de John Corbet[1] parece ser 2009. Desde entonces se ha restringido el acceso a las zonas bajas de memoria del usuario, mitigando el problema de las referencias nulas mediante configuraciones con sysctl y SELinux.
+Explotando la técnica Null Dereference
+====================================
+
+Este modulo y su POC demuestran como una referencia a NULL en el kernel puede causar ejecución de código arbitrario en nuestro sistema. Es difícil saber el año en que se comenzó a explotar esta técnica, pero según un artículo de John Corbet[1] parece ser que fue por 2009. Desde entonces se ha restringido el acceso a las zonas bajas de memoria del usuario, mitigando el problema de las referencias nulas mediante configuraciones con sysctl y SELinux.
+
+¿Cómo funciona todo esto?
+=========================
+
+Vamos a cargar un módulo que tiene un principal objetivo: que cada vez que escribamos en su /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, es decir, a una funcion no referenciada.
+
+```
+void (*my_dereference_funptr)(void);  //Declarada pero no inicializada
+
+ssize_t write_proc(struct file *filp,const char *buf,\
+                   size_t count,loff_t *offp)
+{
+  my_dereference_funptr();            //Llamada a una función sin inicializar
+  return count;
+}
+```
+
+De esta forma la función tendrá como valor por defecto una dirección nula(la dirección 0x0); y al ejecutarla hará que se salte a dicha dirección, que además es válida y conocida por el proceso en su espacio de usuario. 
+
+El POC lo único que hace es cargar un payload en la dirección $0 y posteriormente escribir en /proc/nullderef para que se llame a la función de arriba.
+
+```
+  memcpy(0, payload, sizeof(payload));        //Cargamos el payload en 0x0
+  int fd = open("/proc/nullderef", O_WRONLY); 
+  write(fd, "null dereference", 3);           //Y provocamos la llamada a una referencia nula en el kernel
+```
+
+Todo lo anterior acabará fatídicamente como un "RIP: 00:41414141. Bad RIP Value" en los registros del sistema, que es justamente el payload que cargamos en nuestro POC (jump 0x41414141).
+
+Compilación
+===========
 
 Para compilar el proyecto, siga los siguientes pasos.
 
@@ -28,10 +62,5 @@ El resultado final lo podemos ver en los log del kernel:
   9. dmesg | tail
      
      **RIP: 0010:0x41414141** RSP:0033:0x7ffff7af8ea4
-
-¿Cómo funciona todo esto?
-=========================
-
-El módulo que cargamos en el sistema sólo tiene un objetivo: que cada vez que escribamos en /proc/nullderef, se llame a una función que ha sido declarada pero no inicializada, de esta forma la función tiene como valor por defecto una dirección nula, es decir, la dirección 0x0. Por lo tanto, si ejecutamos la función sin inicializar saltaremos a dicha dirección, que es una dirección válida y conocida para el proceso en el espacio de usuario. El POC lo único que hace es cargar un payload en la dirección $0, de tal forma que se ejecutará lo que allí pongamos, en este caso el código "jump 0x41414141", que finalmente acabará fatídicamente como un "RIP: xx:41414141. Bad RIP Value" en los registros del sistema. 
 
 [1] https://lwn.net/Articles/342330/
