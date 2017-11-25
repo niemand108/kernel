@@ -9,7 +9,7 @@ endif
 EXTRA_CFLAGS += $(DEBFLAGS)
 
 ifneq ($(KERNELRELEASE),)
-	obj-m	:= bug1.o
+	obj-m	:= nullderef_module.o
 else
 
 	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
