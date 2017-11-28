@@ -36,22 +36,19 @@ Compilación
 
 Para compilar el proyecto, siga los siguientes pasos.
 
-  1. cd module && make
-  2. cd ..
-  3. cd poc && make
-  4. cd ..
+  1. make
   
 Una vez compilado, cargamos el módulo, el cual habilitará una entrada en el sistema de ficheros /proc, llamada /proc/nullderef:
   
-  5. sudo insmod module/nullderef_module.ko
+  2. sudo insmod module/nullderef_module.ko
  
 Para que el sistema nos permita utilizar la técnica de null dereference debemos permitir que el usuario tenga acceso a zonas bajas de memoria, concretamente a la dirección 0x00000000, que es la clave de esta técnica.
   
-  6. sudo sysctl -w vm.mmap_min_addr="0"
+  3. sudo sysctl -w vm.mmap_min_addr="0"
 
 También, en el caso de tenerlo habilitado, debemos desactivar temporalmente SELinux, ya que también añade medidas de seguridad para prohibir al usuario accesos a zonas bajas de memoria. 
   
-  7. sudo setenforce 0
+  4. sudo setenforce 0
 
 Una vez desactivadas las barreras, ya podemos accedes y escribir en la dirección 0x0. Ejecutamos el POC, que lo que hará será modificar el EIP/RIP a 0x41414141, demostrando que la ejecución de código es posible.
 
