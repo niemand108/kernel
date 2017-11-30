@@ -21,7 +21,7 @@ Notas
 
 [2] Se repiten direcciones de memoria, ya que hilos y procesos comparten espacio de direcciones.
 
-[3] Los PIDs que arrojan direcciones 0x000000000 son erróneas(?)
+[3] Los PIDs que arrojan direcciones 0x000000000 son hilos del kernel [kthreads]
 
 [4] http://rayseyfarth.com/asm/pdf/ch04-memory-mapping.pdf
 

@@ -45,9 +45,9 @@ ssize_t read_proc (struct file *filp, char *buf, size_t length, loff_t *offset)
 
   long cr3;
   char buf_temp[ 2 + 16 + 2 + 10 + 1]; // "0xXXXXXXXX[16 -> 64bits]: pid[10] \n"
-  struct task_struct *g, *t;
+  struct task_struct *t;
 
-  do_each_thread(g, t) {
+  for_each_process(t) {
     
     cr3 = pid_to_cr3(t->pid);
     sprintf(buf_temp, "0x%x: %ld \n", cr3, t->pid);  
@@ -56,8 +56,7 @@ ssize_t read_proc (struct file *filp, char *buf, size_t length, loff_t *offset)
       goto end_read;
     
     strcat(buf, buf_temp);
-
-  } while_each_thread(g,t);
+  }
 
   end_read:
   *offset = 1; 
