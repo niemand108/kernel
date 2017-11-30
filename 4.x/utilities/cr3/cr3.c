@@ -6,7 +6,7 @@
 #include <linux/pid.h>
 #include <asm/io.h>
 #include <linux/proc_fs.h>
-
+#include <linux/sched/signal.h>
 
 unsigned long pid_to_cr3(int pid)
 {
@@ -37,31 +37,45 @@ unsigned long pid_to_cr3(int pid)
     return cr3_phys;
 }
 
-ssize_t write_proc(struct file *filp, const char *buf, \
-    			size_t count, loff_t *offp)
+ssize_t read_proc (struct file *filp, char *buf, size_t length, loff_t *offset)
 {
-  return count;
-}
+  if(*offset > 0){
+    return 0;
+  }
 
-ssize_t read_proc (struct file *filp, char *buf,\ 
-    size_t length, loff_t *offset)
-{
-  //printk(KERN_DEBUG "-->%d",length);
-  buf[0] = '1';
-  buf[1] = '\0';
-  return 1;
+  long cr3;
+  char buf_temp[ 2 + 16 + 2 + 10 + 1]; // "0xXXXXXXXX[16 -> 64bits]: pid[10] \n"
+  struct task_struct *g, *t;
+
+  do_each_thread(g, t) {
+    
+    cr3 = pid_to_cr3(t->pid);
+    sprintf(buf_temp, "0x%x: %ld \n", cr3, t->pid);  
+    
+    if(strlen(buf) + strlen(buf_temp) >= length)
+      goto end_read;
+    
+    strcat(buf, buf_temp);
+
+  } while_each_thread(g,t);
+
+  end_read:
+  *offset = 1; 
+  return strlen(buf);
 }
 
 struct file_operations proc_fops = {
-write: write_proc,
 read: read_proc
 };
 
-int cr3_init(void) {
+int cr3_init(void) 
+{
   proc_create("cr3", 0600, NULL,  &proc_fops);
+  return 0;
 }
 
-void cr3_cleanup(void){
+void cr3_cleanup(void)
+{
   remove_proc_entry("cr3", NULL);
 }
 
