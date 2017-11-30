@@ -7,11 +7,15 @@ Este módulo muestra en /proc/cr3 la dirección física(real) a la que apunta el
 
 Cómo usar
 =========
+
   1. make
   
   2. insmod cr3.ko
   
   3. sudo cat /proc/cr3
+
+Notas
+=====
 
 [1] Este código está basado en https://carteryagemann.com/pid-to-cr3.html
 
