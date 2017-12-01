@@ -1,5 +1,4 @@
-// pid_to_cr3() source: https://carteryagemann.com/pid-to-cr3.html
-
+// task_cr3 based on: https://carteryagemann.com/pid-to-cr3.html
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
@@ -8,17 +7,14 @@
 #include <linux/proc_fs.h>
 #include <linux/sched/signal.h>
 
-unsigned long pid_to_cr3(int pid)
+unsigned long task_cr3(struct task_struct *task)
 {
-    struct task_struct *task;
     struct mm_struct *mm;
     void *cr3_virt;
     unsigned long cr3_phys;
 
-    task = pid_task(find_vpid(pid), PIDTYPE_PID);
-
     if (task == NULL)
-        return 0; // pid has no task_struct
+        return -1; // 0xFFFFFFFFF
 
     mm = task->mm;
 
@@ -28,8 +24,10 @@ unsigned long pid_to_cr3(int pid)
         mm = task->active_mm;
     }
 
-    if (mm == NULL)
+    if (mm == NULL){
+      	printk( KERN_DEBUG "PID %d: null in mm_struct", task->pid);
         return 0; // this shouldn't happen, but just in case
+    }
 
     cr3_virt = (void *) mm->pgd;
     cr3_phys = virt_to_phys(cr3_virt);
@@ -37,7 +35,7 @@ unsigned long pid_to_cr3(int pid)
     return cr3_phys;
 }
 
-ssize_t read_proc (struct file *filp, char *buf, size_t length, loff_t *offset)
+ssize_t read_proc(struct file *filp, char *buf, size_t length, loff_t *offset)
 {
   if(*offset > 0){
     return 0;
@@ -49,7 +47,7 @@ ssize_t read_proc (struct file *filp, char *buf, size_t length, loff_t *offset)
 
   for_each_process(t) {
     
-    cr3 = pid_to_cr3(t->pid);
+    cr3 = task_cr3(t);
     sprintf(buf_temp, "0x%x: %ld \n", cr3, t->pid);  
     
     if(strlen(buf) + strlen(buf_temp) >= length)
