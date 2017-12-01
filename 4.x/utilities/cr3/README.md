@@ -19,7 +19,7 @@ Notas
 
 [1] Este código está basado en https://carteryagemann.com/pid-to-cr3.html
 
-[2] Se repiten direcciones de memoria, ya que hilos y procesos comparten espacio de direcciones.
+[2] Sólo se muestran los procesos padres, los hijos/hilos se omiten (comparten espacio de direcciones con el padre)
 
 [3] Los PIDs que arrojan direcciones 0x000000000 son hilos del kernel [kthreads]
 
